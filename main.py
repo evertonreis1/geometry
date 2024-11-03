@@ -2,15 +2,33 @@ import sys
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
+import math
+import random
+
 # Variáveis de movimento da câmera
-camera_x, camera_y, camera_z = 0.0, 0.5, 5.0  # Altura da câmera ajustada
+camera_x, camera_y, camera_z = 0.0, 0.5, 5.0
 angle_horizontal, angle_vertical = 0.0, 0.0
 move_speed = 0.1
 rotate_speed = 2.0
 
 # Controle do mouse
-last_mouse_x, last_mouse_y = 400, 300  # Posição inicial (meio da tela)
+last_mouse_x, last_mouse_y = 400, 300
 mouse_sensitivity = 0.2
+
+# Objetos e suas descrições
+objects = [
+    {"name": "Cubo", "description": "Uma forma geométrica de seis faces quadradas.", "position": (-2.0, 0.5, -3.0), "radius": 0.7},
+    {"name": "Esfera", "description": "Uma esfera 3D perfeitamente redonda.", "position": (1.5, 0.5, -2.0), "radius": 0.5},
+    {"name": "Cone", "description": "Um cone com uma base circular.", "position": (0.0, 0.5, -5.0), "radius": 0.5},
+    {"name": "Cilindro", "description": "Um cilindro deitado no chão.", "position": (3.0, 0.5, -4.0), "radius": 0.5},
+    {"name": "Toroide", "description": "Um toroide, ou forma de anel.", "position": (-3.0, 0.5, -5.0), "radius": 0.6},
+    {"name": "Icosaedro", "description": "Um poliedro com 20 faces triangulares.", "position": (2.0, 0.5, -6.0), "radius": 0.6},
+    {"name": "Dodecaedro", "description": "Um poliedro com 12 faces pentagonais.", "position": (-2.0, 0.5, -7.0), "radius": 0.6}
+]
+
+# Objeto próximo
+current_object = None
+last_object = None
 
 # Função para ajustar a luz
 def setup_lighting():
@@ -21,68 +39,72 @@ def setup_lighting():
     glLightfv(GL_LIGHT0, GL_DIFFUSE, [1.0, 1.0, 1.0, 1.0])
     glLightfv(GL_LIGHT0, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
 
+def random_color():
+    return (random.random(), random.random(), random.random())
+
 # Função para desenhar as formas geométricas
 def draw_shapes():
-    # Chão
-    glPushMatrix()
-    glColor3f(0.5, 0.5, 0.5)
+    for obj in objects:
+        glPushMatrix()
+        glTranslatef(*obj["position"])
+        
+        if obj["name"] == "Cubo":
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, CUBE_COLOR + (1.0,))
+            glutSolidCube(1)
+        elif obj["name"] == "Esfera":
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, SPHERE_COLOR + (1.0,))
+            glutSolidSphere(0.5, 32, 32)
+        elif obj["name"] == "Cone":
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, CONE_COLOR + (1.0,))
+            glutSolidCone(0.5, 1.0, 32, 32)
+        elif obj["name"] == "Cilindro":
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, CYLINDER_COLOR + (1.0,))
+            glRotatef(90, 1, 0, 0)
+            glutSolidCylinder(0.3, 1.0, 32, 32)
+        elif obj["name"] == "Toroide":
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, TORUS_COLOR + (1.0,))
+            glutSolidTorus(0.1, 0.5, 32, 32)
+        elif obj["name"] == "Icosaedro":
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, ICOSAHEDRON_COLOR + (1.0,))
+            glutSolidIcosahedron()
+        elif obj["name"] == "Dodecaedro":
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, DODECAHEDRON_COLOR + (1.0,))
+            glutSolidDodecahedron()
+        
+        glPopMatrix()
+
+# Função para desenhar o chão
+def draw_ground():
     glBegin(GL_QUADS)
+    glColor3f(0.5, 0.5, 0.5)
     glVertex3f(-10.0, 0.0, -10.0)
-    glVertex3f(-10.0, 0.0, 10.0)
-    glVertex3f(10.0, 0.0, 10.0)
     glVertex3f(10.0, 0.0, -10.0)
+    glVertex3f(10.0, 0.0, 10.0)
+    glVertex3f(-10.0, 0.0, 10.0)
     glEnd()
-    glPopMatrix()
 
-    # Cubo
-    glPushMatrix()
-    glColor3f(1.0, 0.0, 0.0)
-    glTranslatef(-2.0, 0.5, -3.0)
-    glutSolidCube(1)
-    glPopMatrix()
+# Função para detectar proximidade
+def detect_nearby_object():
+    global current_object
+    current_object = None
+    for obj in objects:
+        distance = math.sqrt(
+            (camera_x - obj["position"][0]) ** 2 +
+            (camera_y - obj["position"][1]) ** 2 +
+            (camera_z - obj["position"][2]) ** 2
+        )
+        if distance < obj["radius"]:
+            current_object = obj
+            break
 
-    # Esfera
-    glPushMatrix()
-    glColor3f(0.0, 1.0, 0.0)
-    glTranslatef(1.5, 0.5, -2.0)
-    glutSolidSphere(0.5, 32, 32)
-    glPopMatrix()
-
-    # Cone
-    glPushMatrix()
-    glColor3f(0.0, 0.0, 1.0)
-    glTranslatef(0.0, 0.5, -5.0)
-    glutSolidCone(0.5, 1.0, 32, 32)
-    glPopMatrix()
-
-    # Cilindro (orientado no eixo Z para ficar deitado no chão)
-    glPushMatrix()
-    glColor3f(1.0, 1.0, 0.0)
-    glTranslatef(3.0, 0.5, -4.0)
-    glRotatef(90, 1, 0, 0)  # Rotaciona o cilindro para deitar no chão
-    glutSolidCylinder(0.3, 1.0, 32, 32)
-    glPopMatrix()
-
-    # Toroide
-    glPushMatrix()
-    glColor3f(1.0, 0.5, 0.0)
-    glTranslatef(-3.0, 0.5, -5.0)
-    glutSolidTorus(0.1, 0.5, 32, 32)
-    glPopMatrix()
-
-    # Icosaedro
-    glPushMatrix()
-    glColor3f(0.0, 1.0, 1.0)
-    glTranslatef(2.0, 0.5, -6.0)
-    glutSolidIcosahedron()
-    glPopMatrix()
-
-    # Dodecaedro
-    glPushMatrix()
-    glColor3f(0.5, 0.0, 0.5)
-    glTranslatef(-2.0, 0.5, -7.0)
-    glutSolidDodecahedron()
-    glPopMatrix()
+# Função para exibir o texto na tela
+def display_text():
+    global current_object
+    global last_object
+    
+    if current_object and last_object != current_object:
+        print(f"{current_object['name']}: {current_object['description']}")
+        last_object = current_object
 
 # Função para atualizar a câmera
 def update_camera():
@@ -100,7 +122,10 @@ def display():
     glLoadIdentity()
     update_camera()
     setup_lighting()
+    draw_ground()  # Desenha o chão
     draw_shapes()
+    detect_nearby_object()
+    display_text()
     glutSwapBuffers()
 
 # Funções de controle de movimento
@@ -128,13 +153,11 @@ def mouse_motion(x, y):
     dy = y - last_mouse_y
 
     angle_horizontal += dx * mouse_sensitivity
-    angle_vertical -= dy * mouse_sensitivity  # Inverte para ajustar ao movimento do mouse
+    angle_vertical -= dy * mouse_sensitivity
 
-    # Limita o ângulo vertical para evitar rotação completa
     angle_vertical = max(-89.0, min(89.0, angle_vertical))
 
     last_mouse_x, last_mouse_y = x, y
-
     glutPostRedisplay()
 
 # Configurações de projeção e perspectiva
@@ -149,22 +172,30 @@ def reshape(width, height):
 def init():
     glEnable(GL_DEPTH_TEST)
     glClearColor(0.1, 0.1, 0.1, 1.0)
-    # Centraliza o mouse
     glutWarpPointer(last_mouse_x, last_mouse_y)
-    glutSetCursor(GLUT_CURSOR_NONE)  # Esconde o cursor
+    glutSetCursor(GLUT_CURSOR_NONE)
 
 # Função principal
 def main():
     glutInit(sys.argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
     glutInitWindowSize(800, 600)
-    glutCreateWindow(b"3D Scene with PyOpenGL and Mouse Control")
+    glutCreateWindow(b"3D Scene with Object Descriptions")
     init()
     glutDisplayFunc(display)
-    glutReshapeFunc(reshape)  # Atualiza perspectiva ao redimensionar
+    glutIdleFunc(display)
     glutKeyboardFunc(keyboard)
-    glutPassiveMotionFunc(mouse_motion)  # Detecta movimento do mouse
+    glutPassiveMotionFunc(mouse_motion)
+    glutReshapeFunc(reshape)
     glutMainLoop()
+
+CUBE_COLOR = random_color()
+SPHERE_COLOR = random_color()
+CONE_COLOR = random_color()
+CYLINDER_COLOR = random_color()
+TORUS_COLOR = random_color()
+ICOSAHEDRON_COLOR = random_color()
+DODECAHEDRON_COLOR = random_color()
 
 if __name__ == "__main__":
     main()
