@@ -80,6 +80,7 @@ def draw_shapes():
 
 
 def draw_ground():
+    glColor3f(1.0, 1.0, 1.0)
     glBegin(GL_QUADS)
     glColor3f(0.5, 0.5, 0.5)
     glVertex3f(-10.0, 0.0, -10.0)
