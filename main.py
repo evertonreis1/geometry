@@ -5,7 +5,6 @@ from OpenGL.GLU import *
 import math
 import random
 
-# Variáveis de movimento da câmera
 camera_x, camera_y, camera_z = 0.0, 0.5, 5.0
 angle_horizontal, angle_vertical = 0.0, 0.0
 move_speed = 0.1
@@ -13,17 +12,15 @@ rotate_speed = 2.0
 
 # Definições das câmeras
 camera_positions = [
-    (0.0, 0.5, 5.0),   # Posição da câmera 1
-    (5.0, 2.0, 5.0),    # Posição da câmera 2
-    (-5.0, 2.0, 5.0)    # Posição da câmera 3
+    (0.0, 0.5, 5.0), 
+    (5.0, 2.0, 5.0),
+    (-5.0, 2.0, 5.0)
 ]
-current_camera_index = 0  # Índice da câmera atual
+current_camera_index = 0
 
-# Controle do mouse
 last_mouse_x, last_mouse_y = 400, 300
 mouse_sensitivity = 0.2
 
-# Objetos e suas descrições
 objects = [
     {"name": "Cubo", "description": "Uma forma geométrica de seis faces quadradas.", "position": (-2.0, 0.5, -3.0), "radius": 0.7},
     {"name": "Esfera", "description": "Uma esfera 3D perfeitamente redonda.", "position": (1.5, 0.5, -2.0), "radius": 0.5},
@@ -34,11 +31,10 @@ objects = [
     {"name": "Dodecaedro", "description": "Um poliedro com 12 faces pentagonais.", "position": (-2.0, 0.5, -7.0), "radius": 0.6}
 ]
 
-# Objeto próximo
 current_object = None
 last_object = None
 
-# Função para ajustar a luz
+
 def setup_lighting():
     glEnable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
@@ -47,10 +43,11 @@ def setup_lighting():
     glLightfv(GL_LIGHT0, GL_DIFFUSE, [1.0, 1.0, 1.0, 1.0])
     glLightfv(GL_LIGHT0, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
 
+
 def random_color():
     return (random.random(), random.random(), random.random())
 
-# Função para desenhar as formas geométricas
+
 def draw_shapes():
     for obj in objects:
         glPushMatrix()
@@ -81,7 +78,7 @@ def draw_shapes():
         
         glPopMatrix()
 
-# Função para desenhar o chão
+
 def draw_ground():
     glBegin(GL_QUADS)
     glColor3f(0.5, 0.5, 0.5)
@@ -91,7 +88,7 @@ def draw_ground():
     glVertex3f(-10.0, 0.0, 10.0)
     glEnd()
 
-# Função para detectar proximidade
+
 def detect_nearby_object():
     global current_object
     current_object = None
@@ -105,7 +102,7 @@ def detect_nearby_object():
             current_object = obj
             break
 
-# Função para exibir o texto na tela
+
 def display_text():
     global current_object
     global last_object
@@ -116,7 +113,7 @@ def display_text():
 
 def update_camera():
     global camera_x, camera_y, camera_z
-    # Use the position of the currently selected camera
+    
     camera_x, camera_y, camera_z = camera_positions[current_camera_index]
     gluLookAt(
         camera_x, camera_y, camera_z,
@@ -126,19 +123,19 @@ def update_camera():
         0.0, 1.0, 0.0
     )
 
-# Função de exibição
+
 def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
     update_camera()
     setup_lighting()
-    draw_ground()  # Desenha o chão
+    draw_ground()
     draw_shapes()
     detect_nearby_object()
     display_text()
     glutSwapBuffers()
 
-# Função de controle de teclado
+
 def keyboard(key, x, y):
     global camera_x, camera_y, camera_z, current_camera_index
     
@@ -163,7 +160,7 @@ def keyboard(key, x, y):
     update_camera()
     glutPostRedisplay()
 
-# Função de controle de rotação com o mouse
+
 def mouse_motion(x, y):
     global angle_horizontal, angle_vertical, last_mouse_x, last_mouse_y
     
@@ -178,7 +175,7 @@ def mouse_motion(x, y):
     last_mouse_x, last_mouse_y = x, y
     glutPostRedisplay()
 
-# Configurações de projeção e perspectiva
+
 def reshape(width, height):
     glViewport(0, 0, width, height)
     glMatrixMode(GL_PROJECTION)
@@ -186,14 +183,14 @@ def reshape(width, height):
     gluPerspective(45.0, float(width) / float(height), 0.1, 50.0)
     glMatrixMode(GL_MODELVIEW)
 
-# Inicialização da cena
+
 def init():
     glEnable(GL_DEPTH_TEST)
     glClearColor(0.1, 0.1, 0.1, 1.0)
     glutWarpPointer(last_mouse_x, last_mouse_y)
     glutSetCursor(GLUT_CURSOR_NONE)
 
-# Função principal
+
 def main():
     glutInit(sys.argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
