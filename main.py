@@ -11,6 +11,14 @@ angle_horizontal, angle_vertical = 0.0, 0.0
 move_speed = 0.1
 rotate_speed = 2.0
 
+# Definições das câmeras
+camera_positions = [
+    (0.0, 0.5, 5.0),   # Posição da câmera 1
+    (5.0, 2.0, 5.0),    # Posição da câmera 2
+    (-5.0, 2.0, 5.0)    # Posição da câmera 3
+]
+current_camera_index = 0  # Índice da câmera atual
+
 # Controle do mouse
 last_mouse_x, last_mouse_y = 400, 300
 mouse_sensitivity = 0.2
@@ -106,8 +114,10 @@ def display_text():
         print(f"{current_object['name']}: {current_object['description']}")
         last_object = current_object
 
-# Função para atualizar a câmera
 def update_camera():
+    global camera_x, camera_y, camera_z
+    # Use the position of the currently selected camera
+    camera_x, camera_y, camera_z = camera_positions[current_camera_index]
     gluLookAt(
         camera_x, camera_y, camera_z,
         camera_x + math.sin(math.radians(angle_horizontal)) * math.cos(math.radians(angle_vertical)), 
@@ -128,21 +138,29 @@ def display():
     display_text()
     glutSwapBuffers()
 
-# Funções de controle de movimento
+# Função de controle de teclado
 def keyboard(key, x, y):
-    global camera_x, camera_y, camera_z
-    if key == b'w':
-        camera_x += move_speed * math.sin(math.radians(angle_horizontal))
-        camera_z -= move_speed * math.cos(math.radians(angle_horizontal))
-    elif key == b's':
-        camera_x -= move_speed * math.sin(math.radians(angle_horizontal))
-        camera_z += move_speed * math.cos(math.radians(angle_horizontal))
-    elif key == b'a':
-        camera_x -= move_speed * math.cos(math.radians(angle_horizontal))
-        camera_z -= move_speed * math.sin(math.radians(angle_horizontal))
-    elif key == b'd':
-        camera_x += move_speed * math.cos(math.radians(angle_horizontal))
-        camera_z += move_speed * math.sin(math.radians(angle_horizontal))
+    global camera_x, camera_y, camera_z, current_camera_index
+    
+    if current_camera_index == 0:
+        if key == b'w':
+            camera_x += move_speed * math.sin(math.radians(angle_horizontal))
+            camera_z -= move_speed * math.cos(math.radians(angle_horizontal))
+        elif key == b's':
+            camera_x -= move_speed * math.sin(math.radians(angle_horizontal))
+            camera_z += move_speed * math.cos(math.radians(angle_horizontal))
+        elif key == b'a':
+            camera_x -= move_speed * math.cos(math.radians(angle_horizontal))
+            camera_z -= move_speed * math.sin(math.radians(angle_horizontal))
+        elif key == b'd':
+            camera_x += move_speed * math.cos(math.radians(angle_horizontal))
+            camera_z += move_speed * math.sin(math.radians(angle_horizontal))
+        
+        camera_positions[current_camera_index] = (camera_x, camera_y, camera_z)
+    if key == b'c':  # Alternar entre câmeras
+        current_camera_index = (current_camera_index + 1) % len(camera_positions)  # Alterna entre 0 e 1
+    
+    update_camera()
     glutPostRedisplay()
 
 # Função de controle de rotação com o mouse
